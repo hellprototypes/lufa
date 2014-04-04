@@ -93,10 +93,15 @@
 		 */
 		static inline void ISPTarget_SendByte(const uint8_t Byte)
 		{
+#ifdef HELL_WATCH_PORT
+			ISPTarget_TransferSoftSPIByte(Byte);
+#else
+
 			if (HardwareSPIMode)
 			  SPI_SendByte(Byte);
 			else
 			  ISPTarget_TransferSoftSPIByte(Byte);
+#endif
 		}
 
 		/** Receives a byte of ISP data from the attached target, using the appropriate
@@ -107,12 +112,14 @@
 		static inline uint8_t ISPTarget_ReceiveByte(void)
 		{
 			uint8_t ReceivedByte;
-
+#ifdef HELL_WATCH_PORT
+			ReceivedByte = ISPTarget_TransferSoftSPIByte(0x00);
+#else
 			if (HardwareSPIMode)
 			  ReceivedByte = SPI_ReceiveByte();
 			else
 			  ReceivedByte = ISPTarget_TransferSoftSPIByte(0x00);
-
+#endif
 			#if defined(INVERTED_ISP_MISO)
 			return ~ReceivedByte;
 			#else
@@ -130,12 +137,14 @@
 		static inline uint8_t ISPTarget_TransferByte(const uint8_t Byte)
 		{
 			uint8_t ReceivedByte;
-
+#ifdef HELL_WATCH_PORT
+			ReceivedByte = ISPTarget_TransferSoftSPIByte(Byte);
+#else
 			if (HardwareSPIMode)
 			  ReceivedByte = SPI_TransferByte(Byte);
 			else
 			  ReceivedByte = ISPTarget_TransferSoftSPIByte(Byte);
-
+#endif
 			#if defined(INVERTED_ISP_MISO)
 			return ~ReceivedByte;
 			#else

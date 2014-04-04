@@ -42,7 +42,7 @@
 #ifndef _LUFA_CONFIG_H_
 #define _LUFA_CONFIG_H_
 
-	#if (ARCH == ARCH_AVR8)
+	#if (ARCH == ARCH_AVR8) || (ARCH == ARCH_XMEGA)
 
 		/* Non-USB Related Configuration Tokens: */
 //		#define DISABLE_TERMINAL_CODES
@@ -58,7 +58,9 @@
 
 		/* General USB Driver Related Tokens: */
 		#define ORDERED_EP_CONFIG
-		#define USE_STATIC_OPTIONS               (USB_DEVICE_OPT_FULLSPEED | USB_OPT_REG_ENABLED | USB_OPT_AUTO_PLL)
+//		#define USE_STATIC_OPTIONS               (USB_DEVICE_OPT_FULLSPEED | USB_OPT_REG_ENABLED | USB_OPT_AUTO_PLL)
+		#define USE_STATIC_OPTIONS          (USB_DEVICE_OPT_FULLSPEED )
+
 		#define USB_DEVICE_ONLY
 //		#define USB_HOST_ONLY
 //		#define USB_STREAM_TIMEOUT_MS            {Insert Value Here}

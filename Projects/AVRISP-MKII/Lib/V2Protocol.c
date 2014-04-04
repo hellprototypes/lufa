@@ -44,6 +44,9 @@ bool MustLoadExtendedAddress;
 
 
 /** ISR to manage timeouts whilst processing a V2Protocol command */
+#ifdef HELL_WATCH_PORT
+	//FIXME
+#else
 ISR(TIMER0_COMPA_vect, ISR_NOBLOCK)
 {
 	if (TimeoutTicksRemaining)
@@ -51,6 +54,7 @@ ISR(TIMER0_COMPA_vect, ISR_NOBLOCK)
 	else
 	  TCCR0B = 0;
 }
+#endif
 
 /** Initializes the hardware and software associated with the V2 protocol command handling. */
 void V2Protocol_Init(void)
@@ -61,12 +65,14 @@ void V2Protocol_Init(void)
 	ADC_SetupChannel(VTARGET_ADC_CHANNEL);
 	ADC_StartReading(VTARGET_REF_MASK | ADC_RIGHT_ADJUSTED | VTARGET_ADC_CHANNEL_MASK);
 	#endif
-
+#ifdef HELL_WATCH_PORT
+	//FIXME
+#else
 	/* Timeout timer initialization (~10ms period) */
 	OCR0A  = (((F_CPU / 1024) / 100) - 1);
 	TCCR0A = (1 << WGM01);
 	TIMSK0 = (1 << OCIE0A);
-
+#endif
 	V2Params_LoadNonVolatileParamValues();
 
 	#if defined(ENABLE_ISP_PROTOCOL)
@@ -84,8 +90,11 @@ void V2Protocol_ProcessCommand(void)
 
 	/* Reset timeout counter duration and start the timer */
 	TimeoutTicksRemaining = COMMAND_TIMEOUT_TICKS;
+#ifdef HELL_WATCH_PORT
+		//FIXME
+#else
 	TCCR0B = ((1 << CS02) | (1 << CS00));
-
+#endif
 	switch (V2Command)
 	{
 		case CMD_SIGN_ON:
@@ -147,11 +156,14 @@ void V2Protocol_ProcessCommand(void)
 	}
 
 	/* Disable the timeout management timer */
+#ifdef HELL_WATCH_PORT
+	//FIXME
+#else
 	TCCR0B = 0;
-
+#endif
 	Endpoint_WaitUntilReady();
 	Endpoint_SelectEndpoint(AVRISP_DATA_OUT_EPADDR);
-	Endpoint_SetEndpointDirection(ENDPOINT_DIR_OUT);
+	//Endpoint_SetEndpointDirection(ENDPOINT_DIR_OUT);
 }
 
 /** Handler for unknown V2 protocol commands. This discards all sent data and returns a
@@ -170,7 +182,7 @@ static void V2Protocol_UnknownCommand(const uint8_t V2Command)
 
 	Endpoint_ClearOUT();
 	Endpoint_SelectEndpoint(AVRISP_DATA_IN_EPADDR);
-	Endpoint_SetEndpointDirection(ENDPOINT_DIR_IN);
+	//Endpoint_SetEndpointDirection(ENDPOINT_DIR_IN);
 
 	Endpoint_Write_8(V2Command);
 	Endpoint_Write_8(STATUS_CMD_UNKNOWN);
@@ -182,7 +194,7 @@ static void V2Protocol_SignOn(void)
 {
 	Endpoint_ClearOUT();
 	Endpoint_SelectEndpoint(AVRISP_DATA_IN_EPADDR);
-	Endpoint_SetEndpointDirection(ENDPOINT_DIR_IN);
+	//Endpoint_SetEndpointDirection(ENDPOINT_DIR_IN);
 
 	Endpoint_Write_8(CMD_SIGN_ON);
 	Endpoint_Write_8(STATUS_CMD_OK);
@@ -198,7 +210,7 @@ static void V2Protocol_ResetProtection(void)
 {
 	Endpoint_ClearOUT();
 	Endpoint_SelectEndpoint(AVRISP_DATA_IN_EPADDR);
-	Endpoint_SetEndpointDirection(ENDPOINT_DIR_IN);
+	//Endpoint_SetEndpointDirection(ENDPOINT_DIR_IN);
 
 	Endpoint_Write_8(CMD_RESET_PROTECTION);
 	Endpoint_Write_8(STATUS_CMD_OK);
@@ -221,7 +233,7 @@ static void V2Protocol_GetSetParam(const uint8_t V2Command)
 
 	Endpoint_ClearOUT();
 	Endpoint_SelectEndpoint(AVRISP_DATA_IN_EPADDR);
-	Endpoint_SetEndpointDirection(ENDPOINT_DIR_IN);
+	//Endpoint_SetEndpointDirection(ENDPOINT_DIR_IN);
 
 	Endpoint_Write_8(V2Command);
 
@@ -255,7 +267,7 @@ static void V2Protocol_LoadAddress(void)
 
 	Endpoint_ClearOUT();
 	Endpoint_SelectEndpoint(AVRISP_DATA_IN_EPADDR);
-	Endpoint_SetEndpointDirection(ENDPOINT_DIR_IN);
+	//Endpoint_SetEndpointDirection(ENDPOINT_DIR_IN);
 
 	if (CurrentAddress & (1UL << 31))
 	  MustLoadExtendedAddress = true;

@@ -105,7 +105,7 @@ static const uint16_t TimerCompareFromSCKDuration[] PROGMEM =
 };
 
 /** Currently selected SPI driver, either hardware (for fast ISP speeds) or software (for slower ISP speeds). */
-bool HardwareSPIMode = true;
+bool HardwareSPIMode = false;
 
 /** Software SPI data register for sending and receiving */
 static volatile uint8_t SoftSPI_Data;
@@ -115,6 +115,9 @@ static volatile uint8_t SoftSPI_BitsRemaining;
 
 
 /** ISR to handle software SPI transmission and reception */
+#ifdef HELL_WATCH_PORT
+	//FIXME
+#else
 ISR(TIMER1_COMPA_vect, ISR_BLOCK)
 {
 	/* Check if rising edge (output next bit) or falling edge (read in next bit) */
@@ -142,7 +145,7 @@ ISR(TIMER1_COMPA_vect, ISR_BLOCK)
 	/* Fast toggle of PORTB.1 via the PIN register (see datasheet) */
 	PINB |= (1 << 1);
 }
-
+#endif
 /** Initializes the appropriate SPI driver (hardware or software, depending on the selected ISP speed) ready for
  *  communication with the attached target.
  */
@@ -150,6 +153,10 @@ void ISPTarget_EnableTargetISP(void)
 {
 	uint8_t SCKDuration = V2Params_GetParameterValue(PARAM_SCK_DURATION);
 
+#ifdef HELL_WATCH_PORT
+	HardwareSPIMode = false;
+	//FIXME
+#else
 	if (SCKDuration < sizeof(SPIMaskFromSCKDuration))
 	{
 		HardwareSPIMode = true;
@@ -166,6 +173,7 @@ void ISPTarget_EnableTargetISP(void)
 
 		ISPTarget_ConfigureSoftwareSPI(SCKDuration);
 	}
+#endif
 }
 
 /** Shuts down the current selected SPI driver (hardware or software, depending on the selected ISP speed) so that no
@@ -173,6 +181,9 @@ void ISPTarget_EnableTargetISP(void)
  */
 void ISPTarget_DisableTargetISP(void)
 {
+#ifdef HELL_WATCH_PORT
+	//FIXME
+#else
 	if (HardwareSPIMode)
 	{
 		SPI_Disable();
@@ -186,6 +197,7 @@ void ISPTarget_DisableTargetISP(void)
 		 * re-purposed for software SPI */
 		ISPTarget_ConfigureRescueClock();
 	}
+#endif
 }
 
 /** Configures the AVR to produce a 4MHz rescue clock out of the OCR1A pin of the AVR, so
@@ -195,6 +207,9 @@ void ISPTarget_DisableTargetISP(void)
  */
 void ISPTarget_ConfigureRescueClock(void)
 {
+#ifdef HELL_WATCH_PORT
+		//FIXME
+#else
 	#if defined(XCK_RESCUE_CLOCK_ENABLE)
 		/* Configure XCK as an output for the specified AVR model */
 		DDRD  |= (1 << 5);
@@ -218,6 +233,7 @@ void ISPTarget_ConfigureRescueClock(void)
 		TCCR1A = (1 << COM1A0);
 		TCCR1B = ((1 << WGM12) | (1 << CS10));
 	#endif
+#endif
 }
 
 /** Configures the AVR's timer ready to produce software SPI for the slower ISP speeds that
@@ -227,12 +243,16 @@ void ISPTarget_ConfigureRescueClock(void)
  */
 void ISPTarget_ConfigureSoftwareSPI(const uint8_t SCKDuration)
 {
+#ifdef HELL_WATCH_PORT
+		//FIXME
+#else
 	/* Configure Timer 1 for software SPI using the specified SCK duration */
 	TIMSK1 = (1 << OCIE1A);
 	TCNT1  = 0;
 	OCR1A  = pgm_read_word(&TimerCompareFromSCKDuration[SCKDuration - sizeof(SPIMaskFromSCKDuration)]);
 	TCCR1A = 0;
 	TCCR1B = 0;
+#endif
 }
 
 /** Sends and receives a single byte of data to and from the attached target via software SPI.
@@ -245,7 +265,9 @@ uint8_t ISPTarget_TransferSoftSPIByte(const uint8_t Byte)
 {
 	SoftSPI_Data          = Byte;
 	SoftSPI_BitsRemaining = 8;
-
+#ifdef HELL_WATCH_PORT
+		//FIXME
+#else
 	/* Set initial MOSI pin state according to the byte to be transferred */
 	if (SoftSPI_Data & (1 << 7))
 	  PORTB |=  (1 << 2);
@@ -256,7 +278,7 @@ uint8_t ISPTarget_TransferSoftSPIByte(const uint8_t Byte)
 	TCCR1B = ((1 << WGM12) | (1 << CS11));
 	while (SoftSPI_BitsRemaining && TimeoutTicksRemaining);
 	TCCR1B = 0;
-
+#endif
 	return SoftSPI_Data;
 }
 
@@ -267,6 +289,9 @@ uint8_t ISPTarget_TransferSoftSPIByte(const uint8_t Byte)
  */
 void ISPTarget_ChangeTargetResetLine(const bool ResetTarget)
 {
+#ifdef HELL_WATCH_PORT
+		//FIXME
+#else
 	if (ResetTarget)
 	{
 		AUX_LINE_DDR |= AUX_LINE_MASK;
@@ -281,6 +306,7 @@ void ISPTarget_ChangeTargetResetLine(const bool ResetTarget)
 		AUX_LINE_DDR  &= ~AUX_LINE_MASK;
 		AUX_LINE_PORT &= ~AUX_LINE_MASK;
 	}
+#endif
 }
 
 /** Waits until the target has completed the last operation, by continuously polling the device's
