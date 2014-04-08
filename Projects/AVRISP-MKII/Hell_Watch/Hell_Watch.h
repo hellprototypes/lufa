@@ -3,5 +3,5 @@
 
 void hell_watch_hw_init(void);
 void hell_watch_poll(void);
-void hell_watch_print(const char *msg);
+void hell_watch_print(char *msg);
 #endif

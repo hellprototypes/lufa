@@ -97,4 +97,11 @@
 #define vbat_m_pwr_on() 	setbit(PORT_CTRL_OUT, PIN_ADC_EN)
 /** **********************************************************/
 
+#define DEBUG_PIN_EN		1
+#if DEBUG_PIN_EN
+#define DBG_TRIGGER()		togglebit(GPIO_H_OUT, PIN_GPIO_6)
+#else
+#define DBG_TRIGGER()
+#endif
+
 #endif /* UTIL_H_ */

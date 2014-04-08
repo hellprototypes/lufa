@@ -41,6 +41,9 @@ void clock_init(void)
 
 	while (!(OSC.STATUS & OSC_PLLRDY_bm));
 
+	USB.CTRLA = 0x00;
+	PR.PRGEN &= ~0x40;//enable clock to usb
+
 	//==============================================
 	TCC1.PER = 1999;
 	TCC1.INTCTRLA = 0x03; //HI Pri
@@ -88,11 +91,12 @@ void sys_power_off(void)
 
 	USB_Disable();
 
+	ms_delay(800);
 	oled_power(false);
-	ms_delay(200);
+	ms_delay(100);
 	vbat_m_pwr_off();
 	OLED_TO_RST();
-	ms_delay(200);
+	ms_delay(100);
 	pwr_lock_free();//LDO off
 }
 
@@ -109,9 +113,10 @@ inline void hell_watch_poll(void)
 	if(testbit(PORT_CTRL_IN,PIN_KEY_MAIN)) {
 		sys_power_off();
 	}
+	printf("%02x\r\n", USB.STATUS);
 }
 
-void hell_watch_print(const char *msg)
+void hell_watch_print(char *msg)
 {
 	draw_string(msg,false,0,0);
 	draw_end();

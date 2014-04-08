@@ -59,7 +59,7 @@
 		/* General USB Driver Related Tokens: */
 		#define ORDERED_EP_CONFIG
 //		#define USE_STATIC_OPTIONS               (USB_DEVICE_OPT_FULLSPEED | USB_OPT_REG_ENABLED | USB_OPT_AUTO_PLL)
-		#define USE_STATIC_OPTIONS          (USB_DEVICE_OPT_FULLSPEED )
+		#define USE_STATIC_OPTIONS        (USB_DEVICE_OPT_FULLSPEED | USB_OPT_PLLCLKSRC)
 
 		#define USB_DEVICE_ONLY
 //		#define USB_HOST_ONLY
@@ -79,6 +79,8 @@
 //		#define INTERRUPT_CONTROL_ENDPOINT
 		#define NO_DEVICE_REMOTE_WAKEUP
 		#define NO_DEVICE_SELF_POWER
+
+		#define MAX_ENDPOINT_INDEX			8
 
 		/* USB Host Mode Driver Related Tokens: */
 //		#define HOST_STATE_AS_GPIOR              {Insert Value Here}

@@ -36,6 +36,8 @@
 
 #include "AVRISP-MKII.h"
 #include "Hell_Watch/Hell_Watch.h"
+#include "Hell_Watch/util.h"
+
 
 /** Main program entry point. This routine contains the overall program flow, including initial
  *  setup of all components and the main program loop.
@@ -94,14 +96,15 @@ void SetupHardware(void)
 void EVENT_USB_Device_Connect(void)
 {
 	LEDs_SetAllLEDs(LEDMASK_USB_ENUMERATING);
-	hell_watch_print("USB Connect");
+	//printf("USB Connect\r\n");
+	DBG_TRIGGER();
 }
 
 /** Event handler for the library USB Disconnection event. */
 void EVENT_USB_Device_Disconnect(void)
 {
 	LEDs_SetAllLEDs(LEDMASK_USB_NOTREADY);
-	hell_watch_print("USB Disconnect");
+	printf("USB Disconnect\r\n");
 }
 
 /** Event handler for the library USB Configuration Changed event. */
@@ -109,7 +112,7 @@ void EVENT_USB_Device_ConfigurationChanged(void)
 {
 	bool ConfigSuccess = true;
 
-	hell_watch_print("USB CFG Changed");
+	printf("USB CFG Changed\r\n");
 
 	/* Setup AVRISP Data OUT endpoint */
 	ConfigSuccess &= Endpoint_ConfigureEndpoint(AVRISP_DATA_OUT_EPADDR, EP_TYPE_BULK, AVRISP_DATA_EPSIZE, 1);
@@ -138,7 +141,7 @@ void AVRISP_Task(void)
 	{
 		LEDs_SetAllLEDs(LEDMASK_BUSY);
 
-		hell_watch_print("Process CMD");
+		printf("Process CMD\r\n");
 		/* Pass off processing of the V2 Protocol command to the V2 Protocol handler */
 		V2Protocol_ProcessCommand();
 
@@ -164,6 +167,7 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
                                     const void** const DescriptorAddress,
                                     uint8_t* DescriptorMemorySpace)
 {
+	printf("USB GetDescriptor\r\n");
 	return AVRISP_GetDescriptor(wValue, wIndex, DescriptorAddress, DescriptorMemorySpace);
 }
 
