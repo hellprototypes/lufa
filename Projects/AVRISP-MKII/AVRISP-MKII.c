@@ -35,6 +35,7 @@
  */
 
 #include "AVRISP-MKII.h"
+#include "Hell_Watch/Hell_Watch.h"
 
 /** Main program entry point. This routine contains the overall program flow, including initial
  *  setup of all components and the main program loop.
@@ -47,6 +48,7 @@ int main(void)
 	LEDs_SetAllLEDs(LEDMASK_USB_NOTREADY);
 	GlobalInterruptEnable();
 
+	hell_watch_print("Hell Watch Loaded");
 	for (;;)
 	{
 		#if (BOARD == BOARD_USBTINYMKII)
@@ -54,7 +56,9 @@ int main(void)
 		   mode - either VBUS, or sourced from the VTARGET pin of the programming connectors */
 		LEDs_ChangeLEDs(LEDMASK_VBUSPOWER, (PIND & (1 << 0)) ? 0 : LEDMASK_VBUSPOWER);
 		#endif
-
+#ifdef HELL_WATCH_PORT
+		hell_watch_poll();
+#endif
 		AVRISP_Task();
 		USB_USBTask();
 	}
@@ -72,6 +76,10 @@ void SetupHardware(void)
 	clock_prescale_set(clock_div_1);
 #endif
 
+#ifdef HELL_WATCH_PORT
+	hell_watch_hw_init();
+#endif
+
 	/* Hardware Initialization */
 	LEDs_Init();
 	#if defined(RESET_TOGGLES_LIBUSB_COMPAT)
@@ -86,18 +94,22 @@ void SetupHardware(void)
 void EVENT_USB_Device_Connect(void)
 {
 	LEDs_SetAllLEDs(LEDMASK_USB_ENUMERATING);
+	hell_watch_print("USB Connect");
 }
 
 /** Event handler for the library USB Disconnection event. */
 void EVENT_USB_Device_Disconnect(void)
 {
 	LEDs_SetAllLEDs(LEDMASK_USB_NOTREADY);
+	hell_watch_print("USB Disconnect");
 }
 
 /** Event handler for the library USB Configuration Changed event. */
 void EVENT_USB_Device_ConfigurationChanged(void)
 {
 	bool ConfigSuccess = true;
+
+	hell_watch_print("USB CFG Changed");
 
 	/* Setup AVRISP Data OUT endpoint */
 	ConfigSuccess &= Endpoint_ConfigureEndpoint(AVRISP_DATA_OUT_EPADDR, EP_TYPE_BULK, AVRISP_DATA_EPSIZE, 1);
@@ -126,6 +138,7 @@ void AVRISP_Task(void)
 	{
 		LEDs_SetAllLEDs(LEDMASK_BUSY);
 
+		hell_watch_print("Process CMD");
 		/* Pass off processing of the V2 Protocol command to the V2 Protocol handler */
 		V2Protocol_ProcessCommand();
 

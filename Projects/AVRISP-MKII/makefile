@@ -18,8 +18,9 @@ F_CPU        = 16000000
 F_USB        = 48000000
 OPTIMIZATION = s
 TARGET       = AVRISP-MKII
+HELL_WATCH_SRC = Hell_Watch/Hell_Watch.c Hell_Watch/draw.c Hell_Watch/oled.c Hell_Watch/uart.c
 SRC          = $(TARGET).c AVRISPDescriptors.c Lib/V2Protocol.c Lib/V2ProtocolParams.c Lib/ISP/ISPProtocol.c Lib/ISP/ISPTarget.c Lib/XPROG/XPROGProtocol.c \
-               Lib/XPROG/XPROGTarget.c Lib/XPROG/XMEGANVM.c Lib/XPROG/TINYNVM.c $(LUFA_SRC_USB)
+               Lib/XPROG/XPROGTarget.c Lib/XPROG/XMEGANVM.c Lib/XPROG/TINYNVM.c $(LUFA_SRC_USB) $(HELL_WATCH_SRC)
 LUFA_PATH    = ../../LUFA
 CC_FLAGS     = -DUSE_LUFA_CONFIG_HEADER -IConfig/
 LD_FLAGS     =
