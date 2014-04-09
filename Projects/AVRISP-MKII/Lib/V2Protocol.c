@@ -116,7 +116,7 @@ void V2Protocol_ProcessCommand(void)
 		case CMD_SET_PARAMETER:
 		case CMD_GET_PARAMETER:
 			V2Protocol_GetSetParam(V2Command);
-			//hell_watch_print("Get/Set Param");
+			hell_watch_print("Get/Set Param");
 			break;
 		case CMD_LOAD_ADDRESS:
 			V2Protocol_LoadAddress();

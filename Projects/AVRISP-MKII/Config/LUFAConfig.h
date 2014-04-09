@@ -80,7 +80,7 @@
 		#define NO_DEVICE_REMOTE_WAKEUP
 		#define NO_DEVICE_SELF_POWER
 
-		#define MAX_ENDPOINT_INDEX			8
+		#define MAX_ENDPOINT_INDEX			7
 
 		/* USB Host Mode Driver Related Tokens: */
 //		#define HOST_STATE_AS_GPIOR              {Insert Value Here}
