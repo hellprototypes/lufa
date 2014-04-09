@@ -104,4 +104,6 @@
 #define DBG_TRIGGER()
 #endif
 
+#define DEBUG_PORT_EN		1
+
 #endif /* UTIL_H_ */

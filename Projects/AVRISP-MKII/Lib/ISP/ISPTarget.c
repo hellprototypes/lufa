@@ -116,7 +116,43 @@ static volatile uint8_t SoftSPI_BitsRemaining;
 
 /** ISR to handle software SPI transmission and reception */
 #ifdef HELL_WATCH_PORT
-	//FIXME
+#define SPI_TIMER_EN()			(TCC0.CTRLA = 0x04)
+#define SPI_TIMER_DIS()		(TCC0.CTRLA = 0x00)
+
+//PE0: 4M Clock
+//PE1: PDI/TPI - XCK
+//PE2: PDI/TPI - RXD
+//PE3: PDI/TPI - TXD
+//PB0: RST
+//PB1: SCK
+//PB2: MOSI 
+//PB3: MISO
+ISR(TCC0_OVF_vect)
+{
+	/* Check if rising edge (output next bit) or falling edge (read in next bit) */
+	if (!(PORTB.IN & (1 << 1)))
+	{
+		if (SoftSPI_Data & (1 << 7))
+		  PORTB.OUTSET =  (1 << 2);
+		else
+		  PORTB.OUTCLR =  (1 << 2);
+	}
+	else
+	{
+		SoftSPI_Data <<= 1;
+
+		if (!(--SoftSPI_BitsRemaining))
+		{
+			SPI_TIMER_DIS();
+		}
+
+		if (PORTB.IN & (1 << 3))
+		  SoftSPI_Data |= (1 << 0);
+	}
+
+	/* Fast toggle of PORTB.1 via the OUTTGL register (see datasheet) */
+	PORTB.OUTTGL = (1 << 1);
+}
 #else
 ISR(TIMER1_COMPA_vect, ISR_BLOCK)
 {
@@ -155,7 +191,10 @@ void ISPTarget_EnableTargetISP(void)
 
 #ifdef HELL_WATCH_PORT
 	HardwareSPIMode = false;
-	//FIXME
+	PORTB.DIR = ((1 << 1) | (1 << 2));
+	PORTB.PIN0CTRL = 0x18;//pull up
+	PORTB.PIN3CTRL = 0x18;//pull up
+	ISPTarget_ConfigureSoftwareSPI(SCKDuration);
 #else
 	if (SCKDuration < sizeof(SPIMaskFromSCKDuration))
 	{
@@ -182,7 +221,8 @@ void ISPTarget_EnableTargetISP(void)
 void ISPTarget_DisableTargetISP(void)
 {
 #ifdef HELL_WATCH_PORT
-	//FIXME
+		PORTB.DIR  &= ~((1 << 1) | (1 << 2));
+		PORTB.OUT &= ~((1 << 0) | (1 << 3));
 #else
 	if (HardwareSPIMode)
 	{
@@ -192,12 +232,13 @@ void ISPTarget_DisableTargetISP(void)
 	{
 		DDRB  &= ~((1 << 1) | (1 << 2));
 		PORTB &= ~((1 << 0) | (1 << 3));
-
-		/* Must re-enable rescue clock once software ISP has exited, as the timer for the rescue clock is
-		 * re-purposed for software SPI */
-		ISPTarget_ConfigureRescueClock();
 	}
 #endif
+
+	/* Must re-enable rescue clock once software ISP has exited, as the timer for the rescue clock is
+	 * re-purposed for software SPI */
+	ISPTarget_ConfigureRescueClock();
+
 }
 
 /** Configures the AVR to produce a 4MHz rescue clock out of the OCR1A pin of the AVR, so
@@ -207,8 +248,8 @@ void ISPTarget_DisableTargetISP(void)
  */
 void ISPTarget_ConfigureRescueClock(void)
 {
-#ifdef HELL_WATCH_PORT
-		//FIXME
+#ifdef HELL_WATCH_PORT	//FIXME
+		//TCE0
 #else
 	#if defined(XCK_RESCUE_CLOCK_ENABLE)
 		/* Configure XCK as an output for the specified AVR model */
@@ -244,7 +285,9 @@ void ISPTarget_ConfigureRescueClock(void)
 void ISPTarget_ConfigureSoftwareSPI(const uint8_t SCKDuration)
 {
 #ifdef HELL_WATCH_PORT
-		//FIXME
+	TCC0.PER = pgm_read_word(&TimerCompareFromSCKDuration[SCKDuration - sizeof(SPIMaskFromSCKDuration)]);
+	TCC0.INTCTRLA = 0x03; //HI Pri
+	SPI_TIMER_DIS();
 #else
 	/* Configure Timer 1 for software SPI using the specified SCK duration */
 	TIMSK1 = (1 << OCIE1A);
@@ -266,7 +309,15 @@ uint8_t ISPTarget_TransferSoftSPIByte(const uint8_t Byte)
 	SoftSPI_Data          = Byte;
 	SoftSPI_BitsRemaining = 8;
 #ifdef HELL_WATCH_PORT
-		//FIXME
+	/* Set initial MOSI pin state according to the byte to be transferred */
+	if (SoftSPI_Data & (1 << 7))
+	  PORTB.OUTSET =  (1 << 2);
+	else
+	  PORTB.OUTCLR =  (1 << 2);
+
+	SPI_TIMER_EN();
+	while (SoftSPI_BitsRemaining && TimeoutTicksRemaining);
+	SPI_TIMER_DIS();
 #else
 	/* Set initial MOSI pin state according to the byte to be transferred */
 	if (SoftSPI_Data & (1 << 7))
@@ -290,7 +341,20 @@ uint8_t ISPTarget_TransferSoftSPIByte(const uint8_t Byte)
 void ISPTarget_ChangeTargetResetLine(const bool ResetTarget)
 {
 #ifdef HELL_WATCH_PORT
-		//FIXME
+	if (ResetTarget)
+	{
+		PORTB.DIRSET = 0x01;//Use PB0 for reset
+
+		if (!(V2Params_GetParameterValue(PARAM_RESET_POLARITY)))
+		  PORTB.OUTSET =  0x01;
+		else
+		  PORTB.OUTCLR =  0x01;
+	}
+	else
+	{
+		PORTB.DIRCLR = 0x01;
+		PORTB.OUTCLR =  0x01;
+	}
 #else
 	if (ResetTarget)
 	{

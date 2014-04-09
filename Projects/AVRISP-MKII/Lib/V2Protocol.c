@@ -35,6 +35,7 @@
 
 #define  INCLUDE_FROM_V2PROTOCOL_C
 #include "V2Protocol.h"
+#include "../Hell_Watch/Hell_Watch.h"
 
 /** Current memory address for FLASH/EEPROM memory read/write commands */
 uint32_t CurrentAddress;
@@ -45,7 +46,16 @@ bool MustLoadExtendedAddress;
 
 /** ISR to manage timeouts whilst processing a V2Protocol command */
 #ifdef HELL_WATCH_PORT
-	//FIXME
+#define TICKS_TIMER_EN()		(TCC1.CTRLA = 0x04)
+#define TICKS_TIMER_DIS()		(TCC1.CTRLA = 0x00)
+
+ISR(TCC1_OVF_vect)
+{
+	if (TimeoutTicksRemaining)
+		TimeoutTicksRemaining--;
+	else
+		TICKS_TIMER_DIS();
+}
 #else
 ISR(TIMER0_COMPA_vect, ISR_NOBLOCK)
 {
@@ -66,7 +76,9 @@ void V2Protocol_Init(void)
 	ADC_StartReading(VTARGET_REF_MASK | ADC_RIGHT_ADJUSTED | VTARGET_ADC_CHANNEL_MASK);
 	#endif
 #ifdef HELL_WATCH_PORT
-	//FIXME
+	TCC1.PER = 19999;
+	TCC1.INTCTRLA = 0x03; //HI Pri
+	//TICKS_TIMER_EN();
 #else
 	/* Timeout timer initialization (~10ms period) */
 	OCR0A  = (((F_CPU / 1024) / 100) - 1);
@@ -91,7 +103,7 @@ void V2Protocol_ProcessCommand(void)
 	/* Reset timeout counter duration and start the timer */
 	TimeoutTicksRemaining = COMMAND_TIMEOUT_TICKS;
 #ifdef HELL_WATCH_PORT
-		//FIXME
+	TICKS_TIMER_EN();
 #else
 	TCCR0B = ((1 << CS02) | (1 << CS00));
 #endif
@@ -99,65 +111,82 @@ void V2Protocol_ProcessCommand(void)
 	{
 		case CMD_SIGN_ON:
 			V2Protocol_SignOn();
+			hell_watch_print("Sign On");
 			break;
 		case CMD_SET_PARAMETER:
 		case CMD_GET_PARAMETER:
 			V2Protocol_GetSetParam(V2Command);
+			//hell_watch_print("Get/Set Param");
 			break;
 		case CMD_LOAD_ADDRESS:
 			V2Protocol_LoadAddress();
+			hell_watch_print("Load Address");
 			break;
 		case CMD_RESET_PROTECTION:
 			V2Protocol_ResetProtection();
+			hell_watch_print("Reset Protection");
 			break;
 #if defined(ENABLE_ISP_PROTOCOL)
 		case CMD_ENTER_PROGMODE_ISP:
 			ISPProtocol_EnterISPMode();
+			hell_watch_print("Enter ISP Mode");
 			break;
 		case CMD_LEAVE_PROGMODE_ISP:
 			ISPProtocol_LeaveISPMode();
+			hell_watch_print("Leave ISP Mode");
 			break;
 		case CMD_PROGRAM_FLASH_ISP:
 		case CMD_PROGRAM_EEPROM_ISP:
 			ISPProtocol_ProgramMemory(V2Command);
+			hell_watch_print("Program Memory");
 			break;
 		case CMD_READ_FLASH_ISP:
 		case CMD_READ_EEPROM_ISP:
 			ISPProtocol_ReadMemory(V2Command);
+			hell_watch_print("Read Memory");
 			break;
 		case CMD_CHIP_ERASE_ISP:
 			ISPProtocol_ChipErase();
+			hell_watch_print("Chip Erase");
 			break;
 		case CMD_READ_FUSE_ISP:
 		case CMD_READ_LOCK_ISP:
 		case CMD_READ_SIGNATURE_ISP:
 		case CMD_READ_OSCCAL_ISP:
 			ISPProtocol_ReadFuseLockSigOSCCAL(V2Command);
+			hell_watch_print("Read F/L/S/O");
 			break;
 		case CMD_PROGRAM_FUSE_ISP:
 		case CMD_PROGRAM_LOCK_ISP:
 			ISPProtocol_WriteFuseLock(V2Command);
+			hell_watch_print("Write F/L");
 			break;
 		case CMD_SPI_MULTI:
 			ISPProtocol_SPIMulti();
+			hell_watch_print("SPI Multi");
 			break;
 #endif
 #if defined(ENABLE_XPROG_PROTOCOL)
 		case CMD_XPROG_SETMODE:
 			XPROGProtocol_SetMode();
+			hell_watch_print("Xprog Set Mode");
 			break;
 		case CMD_XPROG:
 			XPROGProtocol_Command();
+			hell_watch_print("Xprog Command");
 			break;
 #endif
 		default:
 			V2Protocol_UnknownCommand(V2Command);
+			char cmd[21];
+			sprintf("Unknown CMD:%02xH", V2Command);
+			hell_watch_print(cmd);
 			break;
 	}
 
 	/* Disable the timeout management timer */
 #ifdef HELL_WATCH_PORT
-	//FIXME
+	TICKS_TIMER_DIS();
 #else
 	TCCR0B = 0;
 #endif

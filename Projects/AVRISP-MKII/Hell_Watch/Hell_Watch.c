@@ -14,7 +14,7 @@
 
 static volatile uint16_t milliseconds;
 
-#define MILLIS_TIMER_EN()		(TCC1.CTRLA = 0x04)
+#define MILLIS_TIMER_EN()		()
 
 // Initialise library
 void clock_init(void)
@@ -41,12 +41,9 @@ void clock_init(void)
 
 	while (!(OSC.STATUS & OSC_PLLRDY_bm));
 
-	//==============================================
-	TCC1.PER = 1999;
-	TCC1.INTCTRLA = 0x03; //HI Pri
-	MILLIS_TIMER_EN();//DIV 8,  2M
-}
 
+}
+/*
 uint16_t millis_get(void)
 {
 	uint16_t ms;
@@ -81,19 +78,19 @@ void ms_delay(uint16_t ms)
 		//sleep_mode();
 	} while(1);
 }
-
+*/
 void sys_power_off(void)
 {
 	hell_watch_print("Power OFF");
 
 	USB_Disable();
 
-	ms_delay(800);
+	Delay_MS(800);
 	oled_power(false);
-	ms_delay(100);
+	Delay_MS(100);
 	vbat_m_pwr_off();
 	OLED_TO_RST();
-	ms_delay(100);
+	Delay_MS(100);
 	pwr_lock_free();//LDO off
 }
 
@@ -123,6 +120,8 @@ inline void hell_watch_hw_init(void)
 	oled_init();
 
 	deinit_usb();
+
+	//hell_watch_print("HW Init DONE");
 }
 
 inline void hell_watch_poll(void)
@@ -137,11 +136,4 @@ void hell_watch_print(char *msg)
 	draw_string(msg,false,0,0);
 	draw_end();
 }
-
-
-ISR(TCC1_OVF_vect)
-{
-	milliseconds++;
-}
-
 

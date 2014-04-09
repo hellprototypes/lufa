@@ -5,13 +5,13 @@
 #include "util.h"
 #include "uart.h"
 
+#if DEBUG_PORT_EN
 static int put(char, FILE*);
 
 FILE uart_io = FDEV_SETUP_STREAM(put, NULL, _FDEV_SETUP_WRITE);
 
 void uart_init()
 {
-
 #if DEBUG_PIN_EN
 	PORTE.DIR		|= 0x0C;
 	PORTE.OUT		|= 0x0C;
@@ -39,3 +39,8 @@ static int put(char c, FILE* stream)
     USARTE0.DATA = c;
 	return 0;
 }
+#else
+void uart_init()
+{
+}
+#endif
