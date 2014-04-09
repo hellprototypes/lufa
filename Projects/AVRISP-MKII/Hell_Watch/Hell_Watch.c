@@ -41,9 +41,6 @@ void clock_init(void)
 
 	while (!(OSC.STATUS & OSC_PLLRDY_bm));
 
-	USB.CTRLA = 0x00;
-	PR.PRGEN &= ~0x40;//enable clock to usb
-
 	//==============================================
 	TCC1.PER = 1999;
 	TCC1.INTCTRLA = 0x03; //HI Pri
@@ -100,12 +97,32 @@ void sys_power_off(void)
 	pwr_lock_free();//LDO off
 }
 
+inline void deinit_usb(void)
+{
+	//USBPSDIV[2:0] bits are locked as long as the USB clock source is enabled(USBSEN=1).
+	//So clear USBSEN bit first
+	CLK.USBCTRL = 0x00;
+	CLK.USBCTRL = 0x00;
+	
+	PR.PRGEN &= ~0x40;//enable clock to usb
+	USB.CTRLA = 0x00;
+	USB.CTRLB = 0x00;
+	USB.ADDR = 0x00;
+	USB.EPPTRL = 0x0000;
+	USB.INTFLAGSACLR = 0xFF;
+	USB.INTCTRLA = 0x00;
+	USB.INTCTRLB = 0x00;
+	USB.INTFLAGSACLR = 0xFF;
+	USB.INTFLAGSBCLR = 0xFF;
+}
 inline void hell_watch_hw_init(void)
 {
 	PMIC.CTRL = PMIC_LOLVLEN_bm | PMIC_MEDLVLEN_bm | PMIC_HILVLEN_bm;
 	uart_init();
 	clock_init();
 	oled_init();
+
+	deinit_usb();
 }
 
 inline void hell_watch_poll(void)
@@ -113,7 +130,6 @@ inline void hell_watch_poll(void)
 	if(testbit(PORT_CTRL_IN,PIN_KEY_MAIN)) {
 		sys_power_off();
 	}
-	printf("%02x\r\n", USB.STATUS);
 }
 
 void hell_watch_print(char *msg)

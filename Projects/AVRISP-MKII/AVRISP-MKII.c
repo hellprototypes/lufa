@@ -50,7 +50,6 @@ int main(void)
 	LEDs_SetAllLEDs(LEDMASK_USB_NOTREADY);
 	GlobalInterruptEnable();
 
-	hell_watch_print("Hell Watch Loaded");
 	for (;;)
 	{
 		#if (BOARD == BOARD_USBTINYMKII)
@@ -80,6 +79,7 @@ void SetupHardware(void)
 
 #ifdef HELL_WATCH_PORT
 	hell_watch_hw_init();
+	hell_watch_print("Hell Watch Loaded");
 #endif
 
 	/* Hardware Initialization */
@@ -96,8 +96,8 @@ void SetupHardware(void)
 void EVENT_USB_Device_Connect(void)
 {
 	LEDs_SetAllLEDs(LEDMASK_USB_ENUMERATING);
-	//printf("USB Connect\r\n");
-	DBG_TRIGGER();
+	printf("USB Connect\r\n");
+	//DBG_TRIGGER();
 }
 
 /** Event handler for the library USB Disconnection event. */
@@ -141,7 +141,6 @@ void AVRISP_Task(void)
 	{
 		LEDs_SetAllLEDs(LEDMASK_BUSY);
 
-		printf("Process CMD\r\n");
 		/* Pass off processing of the V2 Protocol command to the V2 Protocol handler */
 		V2Protocol_ProcessCommand();
 

@@ -64,7 +64,7 @@
 		#define USB_DEVICE_ONLY
 //		#define USB_HOST_ONLY
 //		#define USB_STREAM_TIMEOUT_MS            {Insert Value Here}
-//		#define NO_LIMITED_CONTROLLER_CONNECT
+		#define NO_LIMITED_CONTROLLER_CONNECT
 		#define NO_SOF_EVENTS
 
 		/* USB Device Mode Driver Related Tokens: */
