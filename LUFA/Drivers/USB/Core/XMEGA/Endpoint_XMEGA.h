@@ -451,7 +451,7 @@
 			static inline void Endpoint_SetEndpointDirection(const uint8_t DirectionMask) ATTR_ALWAYS_INLINE;
 			static inline void Endpoint_SetEndpointDirection(const uint8_t DirectionMask)
 			{
-				//FIXME
+				//XMEGA have IN/OUT EP at same time, so no work to do
 			}
 
 			/** Reads one byte from the currently selected endpoint's bank, for OUT direction endpoints.

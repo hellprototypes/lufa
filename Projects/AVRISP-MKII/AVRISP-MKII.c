@@ -100,8 +100,10 @@ void EVENT_USB_Device_ConfigurationChanged(void)
 	/* Setup AVRISP Data OUT endpoint */
 	ConfigSuccess &= Endpoint_ConfigureEndpoint(AVRISP_DATA_OUT_EPADDR, EP_TYPE_BULK, AVRISP_DATA_EPSIZE, 1);
 
+#ifndef HELL_WATCH_PORT
 	/* Setup AVRISP Data IN endpoint if it is using a physically different endpoint */
 	if ((AVRISP_DATA_IN_EPADDR & ENDPOINT_EPNUM_MASK) != (AVRISP_DATA_OUT_EPADDR & ENDPOINT_EPNUM_MASK))
+#endif
 	  ConfigSuccess &= Endpoint_ConfigureEndpoint(AVRISP_DATA_IN_EPADDR, EP_TYPE_BULK, AVRISP_DATA_EPSIZE, 1);
 
 	/* Indicate endpoint configuration success or failure */
