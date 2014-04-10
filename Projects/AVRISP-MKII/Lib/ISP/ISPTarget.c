@@ -70,6 +70,7 @@ static const uint8_t SPIMaskFromSCKDuration[] PROGMEM =
  */
 static const uint16_t TimerCompareFromSCKDuration[] PROGMEM =
 {
+	TIMER_COMP(8000000), TIMER_COMP(4000000), TIMER_COMP(2000000), TIMER_COMP(1000000), TIMER_COMP(500000), TIMER_COMP(250000), TIMER_COMP(125000),
 	TIMER_COMP(96386), TIMER_COMP(89888), TIMER_COMP(84211), TIMER_COMP(79208), TIMER_COMP(74767),
 	TIMER_COMP(70797), TIMER_COMP(67227), TIMER_COMP(64000), TIMER_COMP(61069), TIMER_COMP(58395),
 	TIMER_COMP(55945), TIMER_COMP(51613), TIMER_COMP(49690), TIMER_COMP(47905), TIMER_COMP(46243),
@@ -116,7 +117,7 @@ static volatile uint8_t SoftSPI_BitsRemaining;
 
 /** ISR to handle software SPI transmission and reception */
 #ifdef HELL_WATCH_PORT
-#define SPI_TIMER_EN()			(TCC0.CTRLA = 0x04)
+#define SPI_TIMER_EN()			(TCC0.CTRLA = 0x01)
 #define SPI_TIMER_DIS()		(TCC0.CTRLA = 0x00)
 
 //PE0: 4M Clock
@@ -285,7 +286,7 @@ void ISPTarget_ConfigureRescueClock(void)
 void ISPTarget_ConfigureSoftwareSPI(const uint8_t SCKDuration)
 {
 #ifdef HELL_WATCH_PORT
-	TCC0.PER = pgm_read_word(&TimerCompareFromSCKDuration[SCKDuration - sizeof(SPIMaskFromSCKDuration)]);
+	TCC0.PER = pgm_read_word(&TimerCompareFromSCKDuration[SCKDuration]);
 	TCC0.INTCTRLA = 0x03; //HI Pri
 	SPI_TIMER_DIS();
 #else
