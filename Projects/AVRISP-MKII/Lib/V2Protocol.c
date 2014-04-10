@@ -192,7 +192,7 @@ void V2Protocol_ProcessCommand(void)
 #endif
 	Endpoint_WaitUntilReady();
 	Endpoint_SelectEndpoint(AVRISP_DATA_OUT_EPADDR);
-	//Endpoint_SetEndpointDirection(ENDPOINT_DIR_OUT);
+	Endpoint_SetEndpointDirection(ENDPOINT_DIR_OUT);
 }
 
 /** Handler for unknown V2 protocol commands. This discards all sent data and returns a
@@ -211,7 +211,7 @@ static void V2Protocol_UnknownCommand(const uint8_t V2Command)
 
 	Endpoint_ClearOUT();
 	Endpoint_SelectEndpoint(AVRISP_DATA_IN_EPADDR);
-	//Endpoint_SetEndpointDirection(ENDPOINT_DIR_IN);
+	Endpoint_SetEndpointDirection(ENDPOINT_DIR_IN);
 
 	Endpoint_Write_8(V2Command);
 	Endpoint_Write_8(STATUS_CMD_UNKNOWN);
@@ -223,7 +223,7 @@ static void V2Protocol_SignOn(void)
 {
 	Endpoint_ClearOUT();
 	Endpoint_SelectEndpoint(AVRISP_DATA_IN_EPADDR);
-	//Endpoint_SetEndpointDirection(ENDPOINT_DIR_IN);
+	Endpoint_SetEndpointDirection(ENDPOINT_DIR_IN);
 
 	Endpoint_Write_8(CMD_SIGN_ON);
 	Endpoint_Write_8(STATUS_CMD_OK);
@@ -239,7 +239,7 @@ static void V2Protocol_ResetProtection(void)
 {
 	Endpoint_ClearOUT();
 	Endpoint_SelectEndpoint(AVRISP_DATA_IN_EPADDR);
-	//Endpoint_SetEndpointDirection(ENDPOINT_DIR_IN);
+	Endpoint_SetEndpointDirection(ENDPOINT_DIR_IN);
 
 	Endpoint_Write_8(CMD_RESET_PROTECTION);
 	Endpoint_Write_8(STATUS_CMD_OK);
@@ -262,7 +262,7 @@ static void V2Protocol_GetSetParam(const uint8_t V2Command)
 
 	Endpoint_ClearOUT();
 	Endpoint_SelectEndpoint(AVRISP_DATA_IN_EPADDR);
-	//Endpoint_SetEndpointDirection(ENDPOINT_DIR_IN);
+	Endpoint_SetEndpointDirection(ENDPOINT_DIR_IN);
 
 	Endpoint_Write_8(V2Command);
 
@@ -296,7 +296,7 @@ static void V2Protocol_LoadAddress(void)
 
 	Endpoint_ClearOUT();
 	Endpoint_SelectEndpoint(AVRISP_DATA_IN_EPADDR);
-	//Endpoint_SetEndpointDirection(ENDPOINT_DIR_IN);
+	Endpoint_SetEndpointDirection(ENDPOINT_DIR_IN);
 
 	if (CurrentAddress & (1UL << 31))
 	  MustLoadExtendedAddress = true;
