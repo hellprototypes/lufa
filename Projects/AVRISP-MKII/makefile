@@ -11,14 +11,14 @@
 
 # Run "make help" for target help.
 
-MCU          = at90usb162
-ARCH         = AVR8
-BOARD        = USBTINYMKII
+MCU          = atxmega32a4u
+ARCH         = XMEGA
+#BOARD       = BOARD_NONE
 F_CPU        = 16000000
-F_USB        = $(F_CPU)
+F_USB        = 48000000
 OPTIMIZATION = s
-TARGET       = AVRISP-MKII
-SRC          = $(TARGET).c AVRISPDescriptors.c Lib/V2Protocol.c Lib/V2ProtocolParams.c Lib/ISP/ISPProtocol.c Lib/ISP/ISPTarget.c Lib/XPROG/XPROGProtocol.c \
+TARGET       = Hell_Watch_AVRISP-MKII
+SRC          = AVRISP-MKII.c AVRISPDescriptors.c Lib/V2Protocol.c Lib/V2ProtocolParams.c Lib/ISP/ISPProtocol.c Lib/ISP/ISPTarget.c Lib/XPROG/XPROGProtocol.c \
                Lib/XPROG/XPROGTarget.c Lib/XPROG/XMEGANVM.c Lib/XPROG/TINYNVM.c $(LUFA_SRC_USB)
 LUFA_PATH    = ../../LUFA
 CC_FLAGS     = -DUSE_LUFA_CONFIG_HEADER -IConfig/

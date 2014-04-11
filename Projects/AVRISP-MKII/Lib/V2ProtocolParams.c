@@ -90,10 +90,14 @@ static ParameterItem_t ParameterTable[] =
 /** Loads saved non-volatile parameter values from the EEPROM into the parameter table, as needed. */
 void V2Params_LoadNonVolatileParamValues(void)
 {
+#ifdef HELL_WATCH_PORT //FIXME: lose setting param after repower
+	uint8_t ResetPolarity = 0xff;
+	uint8_t SCKDuration   = 0xff;
+#else
 	/* Read parameter values that are stored in non-volatile EEPROM */
 	uint8_t ResetPolarity = eeprom_read_byte(&EEPROM_Reset_Polarity);
 	uint8_t SCKDuration   = eeprom_read_byte(&EEPROM_SCK_Duration);
-
+#endif
 	/* Update current parameter table if the EEPROM contents was not blank */
 	if (ResetPolarity != 0xFF)
 	  V2Params_GetParamFromTable(PARAM_RESET_POLARITY)->ParamValue = ResetPolarity;
@@ -172,7 +176,9 @@ void V2Params_SetParameterValue(const uint8_t ParamID,
 	  return;
 
 	ParamInfo->ParamValue = Value;
-
+#ifdef HELL_WATCH_PORT //FIXME
+	//store param to spi flash
+#else
 	/* The target RESET line polarity is a non-volatile parameter, save to EEPROM when changed */
 	if (ParamID == PARAM_RESET_POLARITY)
 	  eeprom_update_byte(&EEPROM_Reset_Polarity, Value);
@@ -180,6 +186,7 @@ void V2Params_SetParameterValue(const uint8_t ParamID,
 	/* The target SCK line period is a non-volatile parameter, save to EEPROM when changed */
 	if (ParamID == PARAM_SCK_DURATION)
 	  eeprom_update_byte(&EEPROM_SCK_Duration, Value);
+#endif
 }
 
 /** Retrieves a parameter entry (including ID, value and privileges) from the parameter table that matches the given

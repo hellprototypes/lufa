@@ -62,7 +62,7 @@
 		#define LOAD_EXTENDED_ADDRESS_CMD     0x4D
 
 		/** Macro to convert an ISP frequency to a number of timer clock cycles for the software SPI driver. */
-		#define TIMER_COMP(freq)              (((F_CPU / 8) / 2 / freq) - 1)
+		#define TIMER_COMP(freq)              ((F_CPU / 2) / freq) //(((F_CPU / 8) / 2 / freq) - 1)
 
 		/** ISP rescue clock speed in Hz, for clocking targets with incorrectly set fuses. */
 		#define ISP_RESCUE_CLOCK_SPEED        4000000
@@ -93,10 +93,15 @@
 		 */
 		static inline void ISPTarget_SendByte(const uint8_t Byte)
 		{
+#ifdef HELL_WATCH_PORT
+			ISPTarget_TransferSoftSPIByte(Byte);
+#else
+
 			if (HardwareSPIMode)
 			  SPI_SendByte(Byte);
 			else
 			  ISPTarget_TransferSoftSPIByte(Byte);
+#endif
 		}
 
 		/** Receives a byte of ISP data from the attached target, using the appropriate
@@ -107,12 +112,14 @@
 		static inline uint8_t ISPTarget_ReceiveByte(void)
 		{
 			uint8_t ReceivedByte;
-
+#ifdef HELL_WATCH_PORT
+			ReceivedByte = ISPTarget_TransferSoftSPIByte(0x00);
+#else
 			if (HardwareSPIMode)
 			  ReceivedByte = SPI_ReceiveByte();
 			else
 			  ReceivedByte = ISPTarget_TransferSoftSPIByte(0x00);
-
+#endif
 			#if defined(INVERTED_ISP_MISO)
 			return ~ReceivedByte;
 			#else
@@ -130,12 +137,14 @@
 		static inline uint8_t ISPTarget_TransferByte(const uint8_t Byte)
 		{
 			uint8_t ReceivedByte;
-
+#ifdef HELL_WATCH_PORT
+			ReceivedByte = ISPTarget_TransferSoftSPIByte(Byte);
+#else
 			if (HardwareSPIMode)
 			  ReceivedByte = SPI_TransferByte(Byte);
 			else
 			  ReceivedByte = ISPTarget_TransferSoftSPIByte(Byte);
-
+#endif
 			#if defined(INVERTED_ISP_MISO)
 			return ~ReceivedByte;
 			#else
