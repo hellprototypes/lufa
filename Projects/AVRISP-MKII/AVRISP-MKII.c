@@ -149,9 +149,6 @@ void AVRISP_Task(void)
 		V2Protocol_ProcessCommand();
 
 		LEDs_SetAllLEDs(LEDMASK_USB_READY);
-#ifdef HELL_WATCH_PORT
-		hell_watch_poll();
-#endif
 	}
 }
 
