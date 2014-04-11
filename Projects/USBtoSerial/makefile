@@ -11,14 +11,14 @@
 
 # Run "make help" for target help.
 
-MCU          = at90usb1287
-ARCH         = AVR8
-BOARD        = USBKEY
-F_CPU        = 8000000
-F_USB        = $(F_CPU)
+MCU          = atxmega32a4u
+ARCH         = XMEGA
+#BOARD       = BOARD_NONE
+F_CPU        = 16000000
+F_USB        = 48000000
 OPTIMIZATION = s
-TARGET       = USBtoSerial
-SRC          = $(TARGET).c Descriptors.c $(LUFA_SRC_USB) $(LUFA_SRC_USBCLASS)
+TARGET       = Hell_Watch_USBtoSerial
+SRC          = USBtoSerial.c Descriptors.c $(LUFA_SRC_USB) $(LUFA_SRC_USBCLASS)
 LUFA_PATH    = ../../LUFA
 CC_FLAGS     = -DUSE_LUFA_CONFIG_HEADER -IConfig/
 LD_FLAGS     =
