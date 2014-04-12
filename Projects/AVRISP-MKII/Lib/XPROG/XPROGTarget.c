@@ -48,18 +48,21 @@ void XPROGTarget_EnableTargetPDI(void)
 
 #ifdef HELL_WATCH_PORT
 	/* Set Tx and XCK as outputs, Rx as input */
-	PORTE.DIRSET =	(1 << 1) | (1 << 3);
+	PORTE.DIRSET =	(1 << 1) | (1 << 3);//1: XCK, 3:TXD
 	PORTE.DIRCLR =	(1 << 2);
+	PORTE.PIN1CTRL |= PORT_INVEN_bm;//Data changed at the falling XCK clock edge and sampled at the rising XCK clock edge
 
 	/* Set DATA line high for at least 90ns to disable /RESET functionality */
 	PORTE.OUTSET = (1 << 3);
 	_delay_us(100);
 
-	USARTE0.BAUDCTRLA = 0x01;//1MHz //FIXME
+	//uint16_t BaudValue = ((((F_CPU / 16) + (XPROG_HARDWARE_SPEED / 2)) / (XPROG_HARDWARE_SPEED)) - 1)
 	USARTE0.BAUDCTRLB = 0x00;
+	USARTE0.BAUDCTRLA = 0x00;//2M
+
 	/* Set up the synchronous USART for XMEGA communications - 8 data bits, even parity, 2 stop bits */
 	USARTE0.CTRLC	  = USART_CMODE0_bm | USART_PMODE1_bm | USART_SBMODE_bm | USART_CHSIZE0_bm | USART_CHSIZE1_bm;	
-	USARTE0.CTRLB	  = USART_RXEN_bm | USART_TXEN_bm;	// Enable TX & RX
+	USARTE0.CTRLB	  = USART_TXEN_bm;	// Enable TX
 #else
 	/* Set Tx and XCK as outputs, Rx as input */
 	DDRD |=  (1 << 5) | (1 << 3);
@@ -92,10 +95,12 @@ void XPROGTarget_EnableTargetTPI(void)
 	/* Set Tx and XCK as outputs, Rx as input */
 	PORTE.DIRSET =	(1 << 1) | (1 << 3);
 	PORTE.DIRCLR =	(1 << 2);
+	PORTE.PIN1CTRL |= PORT_INVEN_bm;//Data changed at the falling XCK clock edge and sampled at the rising XCK clock edge
 
 	/* Set up the synchronous USART for TPI communications - 8 data bits, even parity, 2 stop bits */
-	USARTE0.BAUDCTRLA = 0x01;//1MHz //FIXME
+	//uint16_t BaudValue = ((((F_CPU / 16) + (XPROG_HARDWARE_SPEED / 2)) / (XPROG_HARDWARE_SPEED)) - 1)
 	USARTE0.BAUDCTRLB = 0x00;
+	USARTE0.BAUDCTRLA = 0x01;//2M
 	USARTE0.CTRLC	  = USART_CMODE0_bm | USART_PMODE1_bm | USART_SBMODE_bm | USART_CHSIZE0_bm | USART_CHSIZE1_bm;	
 	USARTE0.CTRLB	  =  USART_TXEN_bm;	// Enable TX
 #else
@@ -131,6 +136,7 @@ void XPROGTarget_DisableTargetPDI(void)
 
 	PORTE.DIRCLR =	(1 << 1) | (1 << 2) | (1 << 3);
 	PORTE.OUTCLR =	(1 << 1) | (1 << 2) | (1 << 3);
+	PORTE.PIN1CTRL &= ~PORT_INVEN_bm;
 #else
 	/* Turn off receiver and transmitter of the USART, clear settings */
 	UCSR1A  = ((1 << TXC1) | (1 << RXC1));
@@ -158,6 +164,7 @@ void XPROGTarget_DisableTargetTPI(void)
 	/* Set all USART lines as inputs, tristate */
 	PORTE.DIRCLR =	(1 << 1) | (1 << 2) | (1 << 3);
 	PORTE.OUTCLR =	(1 << 1) | (1 << 2) | (1 << 3);
+	PORTE.PIN1CTRL &= ~PORT_INVEN_bm;
 
 	/* Tristate target /RESET line */
 	PORTB.DIRCLR =  0x01;//Use PB0 for reset
