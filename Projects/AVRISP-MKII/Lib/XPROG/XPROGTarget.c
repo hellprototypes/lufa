@@ -54,11 +54,11 @@ void XPROGTarget_EnableTargetPDI(void)
 
 	/* Set DATA line high for at least 90ns to disable /RESET functionality */
 	PORTE.OUTSET = (1 << 3);
-	_delay_us(100);
+	_delay_us(5);
 
 	//uint16_t BaudValue = ((((F_CPU / 16) + (XPROG_HARDWARE_SPEED / 2)) / (XPROG_HARDWARE_SPEED)) - 1)
 	USARTE0.BAUDCTRLB = 0x00;
-	USARTE0.BAUDCTRLA = 0x00;//2M
+	USARTE0.BAUDCTRLA = 0x00;
 
 	/* Set up the synchronous USART for XMEGA communications - 8 data bits, even parity, 2 stop bits */
 	USARTE0.CTRLC	  = USART_CMODE0_bm | USART_PMODE1_bm | USART_SBMODE_bm | USART_CHSIZE0_bm | USART_CHSIZE1_bm;	
@@ -100,7 +100,7 @@ void XPROGTarget_EnableTargetTPI(void)
 	/* Set up the synchronous USART for TPI communications - 8 data bits, even parity, 2 stop bits */
 	//uint16_t BaudValue = ((((F_CPU / 16) + (XPROG_HARDWARE_SPEED / 2)) / (XPROG_HARDWARE_SPEED)) - 1)
 	USARTE0.BAUDCTRLB = 0x00;
-	USARTE0.BAUDCTRLA = 0x01;//2M
+	USARTE0.BAUDCTRLA = 0x00;
 	USARTE0.CTRLC	  = USART_CMODE0_bm | USART_PMODE1_bm | USART_SBMODE_bm | USART_CHSIZE0_bm | USART_CHSIZE1_bm;	
 	USARTE0.CTRLB	  =  USART_TXEN_bm;	// Enable TX
 #else
