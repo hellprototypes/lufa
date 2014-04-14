@@ -174,7 +174,7 @@ void V2Protocol_ProcessCommand(void)
 			break;
 		case CMD_XPROG:
 			XPROGProtocol_Command();
-			hell_watch_print("Xprog Command");
+			//hell_watch_print("Xprog Command");
 			break;
 #endif
 		default:
