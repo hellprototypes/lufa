@@ -86,24 +86,31 @@ void XPROGProtocol_Command(void)
 	{
 		case XPROG_CMD_ENTER_PROGMODE:
 			XPROGProtocol_EnterXPROGMode();
+			hell_watch_print("EnterXPROGMode");
 			break;
 		case XPROG_CMD_LEAVE_PROGMODE:
 			XPROGProtocol_LeaveXPROGMode();
+			hell_watch_print("LeaveXPROGMode");
 			break;
 		case XPROG_CMD_ERASE:
 			XPROGProtocol_Erase();
+			hell_watch_print("XPROG Erase");
 			break;
 		case XPROG_CMD_WRITE_MEM:
 			XPROGProtocol_WriteMemory();
+			hell_watch_print("XPROG Write");
 			break;
 		case XPROG_CMD_READ_MEM:
 			XPROGProtocol_ReadMemory();
+			hell_watch_print("XPROG Read");
 			break;
 		case XPROG_CMD_CRC:
 			XPROGProtocol_ReadCRC();
+			hell_watch_print("XPROG ReadCRC");
 			break;
 		case XPROG_CMD_SET_PARAM:
 			XPROGProtocol_SetParam();
+			hell_watch_print("XPROG Set Param");
 			break;
 	}
 }

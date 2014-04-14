@@ -58,7 +58,7 @@ void XPROGTarget_EnableTargetPDI(void)
 
 	//uint16_t BaudValue = ((((F_CPU / 16) + (XPROG_HARDWARE_SPEED / 2)) / (XPROG_HARDWARE_SPEED)) - 1)
 	USARTE0.BAUDCTRLB = 0x00;
-	USARTE0.BAUDCTRLA = 0x00;
+	USARTE0.BAUDCTRLA = 0x03;
 
 	/* Set up the synchronous USART for XMEGA communications - 8 data bits, even parity, 2 stop bits */
 	USARTE0.CTRLC	  = USART_CMODE0_bm | USART_PMODE1_bm | USART_SBMODE_bm | USART_CHSIZE0_bm | USART_CHSIZE1_bm;	
@@ -100,7 +100,7 @@ void XPROGTarget_EnableTargetTPI(void)
 	/* Set up the synchronous USART for TPI communications - 8 data bits, even parity, 2 stop bits */
 	//uint16_t BaudValue = ((((F_CPU / 16) + (XPROG_HARDWARE_SPEED / 2)) / (XPROG_HARDWARE_SPEED)) - 1)
 	USARTE0.BAUDCTRLB = 0x00;
-	USARTE0.BAUDCTRLA = 0x00;
+	USARTE0.BAUDCTRLA = 0x03;
 	USARTE0.CTRLC	  = USART_CMODE0_bm | USART_PMODE1_bm | USART_SBMODE_bm | USART_CHSIZE0_bm | USART_CHSIZE1_bm;	
 	USARTE0.CTRLB	  =  USART_TXEN_bm;	// Enable TX
 #else
@@ -198,6 +198,7 @@ void XPROGTarget_SendByte(const uint8_t Byte)
 #ifdef HELL_WATCH_PORT
 	while ( !(USARTE0.STATUS & USART_DREIF_bm) ) ;
     USARTE0.DATA = Byte;
+	_delay_us(8);//FIXME: inster soft delay, else communicate may fail
 #else
 	/* Wait until there is space in the hardware Tx buffer before writing */
 	while (!(UCSR1A & (1 << UDRE1)));
