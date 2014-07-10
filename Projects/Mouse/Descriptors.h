@@ -45,7 +45,7 @@
 		/** Endpoint address of the Mouse HID reporting IN endpoint. */
 		#define MOUSE_EPADDR              (ENDPOINT_DIR_IN | 1)
 
-		/** Size in bytes of the Mouse HID reporting IN endpoint. */
+		/** Size in uint8_ts of the Mouse HID reporting IN endpoint. */
 		#define MOUSE_EPSIZE              8
 
 	/* Type Defines: */

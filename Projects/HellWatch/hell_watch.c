@@ -1,10 +1,23 @@
 #ifdef HELL_WATCH_PORT
 #include <avr/pgmspace.h>
+#include <util/delay.h>
 
 #define OLED_ACTIVE() 		(PORTD.OUTCLR = 1 << 0)//clrbit(PORT_OLED_OUT, PIN_OLED_CS)
 #define OLED_DEACTIVE()   (PORTD.OUTSET = 1 << 0)//setbit(PORT_OLED_OUT, PIN_OLED_CS)
 #define CMD_MODE()			(PORTD.OUTCLR = 1 << 2)//clrbit(PORT_OLED_OUT,PIN_OLED_DC)
 #define DATA_MODE()		(PORTD.OUTSET = 1 << 2)//setbit(PORT_OLED_OUT,PIN_OLED_DC)
+
+#define KEY_NONE				0
+#define KEY_BTM_LEFT			1
+#define KEY_BTM_RIGHT			2
+#define KEY_3WS_DOWN			3
+#define KEY_3WS_PUSH			4
+#define KEY_3WS_UP				5
+#define KEY_TOP_RIGHT			6
+#define KEY_TOP_LEFT			7
+#define KEY_MAIN				8
+#define KEY_WAIT_FLAG			0xFF
+
 const uint8_t hell_watch_logo_avrisp[] PROGMEM ={
 	0x00,0x00,0x00,0xFC,0xFC,0xFC,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0xFC,0xFC,0xFC,0x00,0x00,0x00,0x00,0x00,0x80,0x80,0xC0,0xC0,0xC0,0xC0,0xC0,0x80,0x80,0x00,0x00,
 	0x00,0x00,0xFE,0xFE,0xFE,0x00,0x00,0x00,0x00,0xFE,0xFE,0xFE,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x04,0x7C,0xFC,0xF8,0x80,0x00,0x00,0x00,0xC0,0xF8,0xFC,
@@ -164,6 +177,7 @@ void hell_watch_hw_init(void)
 	PMIC.CTRL = PMIC_LOLVLEN_bm | PMIC_MEDLVLEN_bm | PMIC_HILVLEN_bm; //enable all interrupt level
 	//Chang system clock to ext 16M clock and setup usb clock
 
+	//Clock init
 	DFLLRC32M.CTRL = 0;
 
 	CCP = CCP_IOREG_gc;
@@ -190,6 +204,50 @@ void hell_watch_hw_init(void)
 	PR.PRGEN &= ~0x40; //enable clock to usb, which disable by bootloader
 	USB.CTRLA = 0x00;
 	USB.CTRLB = 0x00;
+	
+	//buttons init
+	ADCA.CTRLB        = 0x64;			// High current limit, signed mode, no free run, 8 bit
+	ADCA.PRESCALER 	  = 0x07;		// Prescaler 512 (62.5kHZ ADC clock)
+	ADCA.CTRLA		  = 0x01;	// Enable ADC
+
+	ADCA.REFCTRL	  = 0x12;	// REF= VCC/1.6 (3.3V/1.6 = 2.0625V)
+	ADCA.CH1.MUXCTRL  = 0x08;	// Channel 1 input: ADC1 pin
+	ADCA.CH1.CTRL	  = 0x01;	// Single-ended positive input signal
+}
+
+const uint8_t key_value_map[] = {
+	250, 231, 210, 186, 158, 126, 86, 0,
+};
+
+#define START_ADC()			(ADCA.CH1.CTRL |= 0x80)
+#define WAIT_CONVERT()		do{ while(!(ADCA.CH1.INTFLAGS & 0x01)); ADCA.CH1.INTFLAGS = 1;}while(0)
+
+uint8_t get_key_value(void)
+{
+	uint8_t  adc0, adc1, key;
+
+	if(PORTA.IN & (1<<7)) {
+		return KEY_MAIN;
+	} else	{
+		START_ADC();
+		WAIT_CONVERT();
+		adc0 = ADCA.CH1.RESL;
+		if(adc0 <= 250) {
+			_delay_ms(10);
+			START_ADC();
+			WAIT_CONVERT();
+			adc1 = ADCA.CH1.RESL;
+			if(adc0 - adc1 < 2) {
+				for(key = 0; key < 8; key++) {
+					if(adc0 >= key_value_map[key]) {
+						return key;
+					}
+				}
+			}
+		}
+	}
+
+	return KEY_NONE;
 }
 
 void hell_watch_poll(void)

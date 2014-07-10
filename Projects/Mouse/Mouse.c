@@ -36,6 +36,12 @@
 
 #include "Mouse.h"
 
+#define HELL_WATCH_PORT
+#include "../HellWatch/hell_watch.c"
+
+#include "i2c.h"
+#include "i2c_dev.h"
+
 /** Buffer to hold the previously generated Mouse HID report, for comparison purposes inside the HID class driver. */
 static uint8_t PrevMouseHIDReportBuffer[sizeof(USB_MouseReport_Data_t)];
 
@@ -70,16 +76,59 @@ int main(void)
 	LEDs_SetAllLEDs(LEDMASK_USB_NOTREADY);
 	GlobalInterruptEnable();
 
-	for (;;)
-	{
+#ifdef HELL_WATCH_PORT
+	hell_watch_print("Ready...");
+	for (;;) {
+		hell_watch_poll();
+#else
+	for (;;) {
+#endif
 		HID_Device_USBTask(&Mouse_HID_Interface);
 		USB_USBTask();
 	}
 }
 
+#ifdef HELL_WATCH_PORT
+int16_t last_x, last_y;
+void sensor_init(void)
+{
+	uint8_t cmd[4];
+	i2c_init();
+	last_x = 0;
+	last_y = 0;
+
+	cmd[0] = 0x00;//exit sleep mode
+	i2c_dev_write(0xD0, 0x6B, cmd, 1);
+	cmd[0] = 0x04;//SMPLRT_DIV
+	cmd[1] = 0x04;//CONFIG
+	cmd[2] = 0x00;//GYRO_CONFIG
+	cmd[3] = 0x00;//ACCEL_CONFIG
+	i2c_dev_write(0xD0, 0x19, cmd, 4);
+}
+
+bool sensor_get_data(int16_t *x, int16_t *y)
+{
+	uint8_t read[4];
+	bool ret = i2c_dev_read(0xD0, 0x45, read, 4);
+	if(ret) {
+		*x = read[1] | (read[0] << 8);
+		*y = read[3] | (read[2] << 8);
+	} else {
+		*x = 0;
+		*y = 0;
+	}
+	return ret;
+}
+#endif
+
 /** Configures the board hardware and chip peripherals for the demo's functionality. */
 void SetupHardware(void)
 {
+#ifdef HELL_WATCH_PORT
+	hell_watch_hw_init();
+	//hell_watch_disp_logo(2);
+	sensor_init();
+#else
 #if (ARCH == ARCH_AVR8)
 	/* Disable watchdog if enabled by bootloader/fuses */
 	MCUSR &= ~(1 << WDRF);
@@ -97,6 +146,7 @@ void SetupHardware(void)
 	XMEGACLK_StartDFLL(CLOCK_SRC_INT_RC32MHZ, DFLL_REF_INT_USBSOF, F_USB);
 
 	PMIC.CTRL = PMIC_LOLVLEN_bm | PMIC_MEDLVLEN_bm | PMIC_HILVLEN_bm;
+#endif
 #endif
 
 	/* Hardware Initialization */
@@ -148,7 +198,7 @@ void EVENT_USB_Device_StartOfFrame(void)
  *  \param[in,out] ReportID    Report ID requested by the host if non-zero, otherwise callback should set to the generated report ID
  *  \param[in]     ReportType  Type of the report to create, either HID_REPORT_ITEM_In or HID_REPORT_ITEM_Feature
  *  \param[out]    ReportData  Pointer to a buffer where the created report should be stored
- *  \param[out]    ReportSize  Number of bytes written in the report (or zero if no report is to be sent)
+ *  \param[out]    ReportSize  Number of uint8_ts written in the report (or zero if no report is to be sent)
  *
  *  \return Boolean \c true to force the sending of the report, \c false to let the library determine if it needs to be sent
  */
@@ -160,24 +210,51 @@ bool CALLBACK_HID_Device_CreateHIDReport(USB_ClassInfo_HID_Device_t* const HIDIn
 {
 	USB_MouseReport_Data_t* MouseReport = (USB_MouseReport_Data_t*)ReportData;
 
-	uint8_t JoyStatus_LCL    = Joystick_GetStatus();
-	uint8_t ButtonStatus_LCL = Buttons_GetStatus();
+	uint8_t key = get_key_value();
+	int16_t x, y;
+	sensor_get_data(&x, &y);
+	x = x >> 7;
+	y = y >> 7;
 
-	if (JoyStatus_LCL & JOY_UP)
-	  MouseReport->Y = -1;
-	else if (JoyStatus_LCL & JOY_DOWN)
-	  MouseReport->Y =  1;
+	if((x>2) || (x<-2)) {
+		MouseReport->X = x/abs(x);
+	}
+	if((y>2) || (y<-2)) {
+		MouseReport->Y = y/abs(y);
+	}
 
-	if (JoyStatus_LCL & JOY_LEFT)
-	  MouseReport->X = -1;
-	else if (JoyStatus_LCL & JOY_RIGHT)
-	  MouseReport->X =  1;
+	if((last_x != x) || (last_y != y)) {
+		char msg[24];
+		sprintf(msg, "x:%d y:%d", x, y);
+		hell_watch_print(msg);
+	}
+	last_x = x;
+	last_y = y;
 
-	if (JoyStatus_LCL & JOY_PRESS)
-	  MouseReport->Button |= (1 << 0);
-
-	if (ButtonStatus_LCL & BUTTONS_BUTTON1)
-	  MouseReport->Button |= (1 << 1);
+	switch(key) {
+	case KEY_TOP_LEFT:
+		MouseReport->X = -1;
+		break;
+	case KEY_TOP_RIGHT:
+		MouseReport->X =  1;
+		break;
+	case KEY_BTM_LEFT:
+		MouseReport->Button |= (1 << 0);
+		break;
+	case KEY_BTM_RIGHT:
+		MouseReport->Button |= (1 << 1);
+		break;
+	case KEY_3WS_DOWN:
+		MouseReport->Y = -1;
+		break;
+	case KEY_3WS_PUSH:
+		break;
+	case KEY_3WS_UP:
+		MouseReport->Y =  1;
+		break;
+	default:
+		break;
+	}
 
 	*ReportSize = sizeof(USB_MouseReport_Data_t);
 	return true;
@@ -189,7 +266,7 @@ bool CALLBACK_HID_Device_CreateHIDReport(USB_ClassInfo_HID_Device_t* const HIDIn
  *  \param[in] ReportID    Report ID of the received report from the host
  *  \param[in] ReportType  The type of report that the host has sent, either HID_REPORT_ITEM_Out or HID_REPORT_ITEM_Feature
  *  \param[in] ReportData  Pointer to a buffer where the received report has been stored
- *  \param[in] ReportSize  Size in bytes of the received HID report
+ *  \param[in] ReportSize  Size in uint8_ts of the received HID report
  */
 void CALLBACK_HID_Device_ProcessHIDReport(USB_ClassInfo_HID_Device_t* const HIDInterfaceInfo,
                                           const uint8_t ReportID,
