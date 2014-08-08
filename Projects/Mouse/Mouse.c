@@ -36,7 +36,6 @@
 
 #include "Mouse.h"
 
-#define HELL_WATCH_PORT
 #include "../HellWatch/hell_watch.c"
 
 #include "i2c.h"

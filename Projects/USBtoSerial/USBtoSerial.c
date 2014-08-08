@@ -36,7 +36,6 @@
 
 #include "USBtoSerial.h"
 
-#define HELL_WATCH_PORT
 #include "../HellWatch/hell_watch.c"
 
 /** Circular buffer to hold data from the host before it is sent to the device via the serial port. */

@@ -67,5 +67,4 @@
 //	#define RESET_TOGGLES_LIBUSB_COMPAT
 //	#define FIRMWARE_VERSION_MINOR     0x11
 
-	#define HELL_WATCH_PORT
 #endif
