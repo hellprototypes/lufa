@@ -125,7 +125,7 @@ void SetupHardware(void)
 {
 #ifdef HELL_WATCH_PORT
 	hell_watch_hw_init();
-	//hell_watch_disp_logo(2);
+	hell_watch_disp_logo(0xFF);
 	sensor_init();
 #else
 #if (ARCH == ARCH_AVR8)
