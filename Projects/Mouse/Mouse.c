@@ -36,7 +36,7 @@
 
 #include "Mouse.h"
 
-#include "../HellWatch/hell_watch.c"
+#include "../HellWatch/hell_watch.h"
 
 #include "i2c.h"
 #include "i2c_dev.h"

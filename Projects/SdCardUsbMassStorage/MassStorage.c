@@ -36,7 +36,7 @@
 
 #include "MassStorage.h"
 
-#include "../HellWatch/hell_watch.c"
+#include "../HellWatch/hell_watch.h"
 
 /** LUFA Mass Storage Class driver interface configuration and state information. This structure is
  *  passed to all Mass Storage Class driver functions, so that multiple instances of the same class

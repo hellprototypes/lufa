@@ -35,7 +35,7 @@
  */
 
 #include "AVRISP-MKII.h"
-#include "../HellWatch/hell_watch.c"
+#include "../HellWatch/hell_watch.h"
 /*
 	Hell Watch (ATXMEGA32A4U) port functions
 	Port by hell prototypes

@@ -36,7 +36,7 @@
 
 #include "USBtoSerial.h"
 
-#include "../HellWatch/hell_watch.c"
+#include "../HellWatch/hell_watch.h"
 
 /** Circular buffer to hold data from the host before it is sent to the device via the serial port. */
 static RingBuffer_t USBtoUSART_Buffer;
