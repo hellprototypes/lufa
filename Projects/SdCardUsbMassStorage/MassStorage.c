@@ -109,20 +109,21 @@ void SetupHardware(void)
 
 #ifdef HELL_WATCH_PORT
 	hell_watch_hw_init();
-	hell_watch_disp_logo(0xff);
+	PORTB.OUTCLR = _BV(0);
+	PORTB.DIRSET = _BV(0);
+	hell_watch_disp_logo(LOGO_INDEX_SDREADER);
 #endif
 
 	/* Hardware Initialization */
 	LEDs_Init();
 
-	hell_watch_print("SD Card Init ...");
 	if(SDCardManager_Init()) {
-		hell_watch_print("SUCC");
+		hell_watch_print("SD Card Init SUCC");
 	} else {
+		hell_watch_print("SD Card Init FAIL");
 		_delay_ms(1000);
-		hell_watch_print("FAIL");
 	}
-	_delay_ms(1000);
+	_delay_ms(500);
 	USB_Init();
 
 	/* Clear Dataflash sector protections, if enabled */
@@ -150,7 +151,7 @@ void EVENT_USB_Device_ConfigurationChanged(void)
 
 	ConfigSuccess &= MS_Device_ConfigureEndpoints(&Disk_MS_Interface);
 
-	hell_watch_print("Configuration Changed");
+	//hell_watch_print("Configuration Changed");
 }
 
 /** Event handler for the library USB Control Request reception event. */
@@ -168,9 +169,12 @@ bool CALLBACK_MS_Device_SCSICommandReceived(USB_ClassInfo_MS_Device_t* const MSI
 	bool CommandSuccess;
 
 	LEDs_SetAllLEDs(LEDMASK_USB_BUSY);
+	PORTB.OUTCLR = _BV(0);
 	CommandSuccess = SCSI_DecodeSCSICommand(MSInterfaceInfo);
+	PORTB.OUTSET = _BV(0);
 	LEDs_SetAllLEDs(LEDMASK_USB_READY);
 
 	return CommandSuccess;
 }
+
 

@@ -185,7 +185,7 @@ void SetupHardware(void)
 #endif
 #ifdef HELL_WATCH_PORT
 	hell_watch_hw_init();
-	hell_watch_disp_logo(1);
+	hell_watch_disp_logo(LOGO_INDEX_USB2SERIAL);
 #endif
 	/* Hardware Initialization */
 	LEDs_Init();

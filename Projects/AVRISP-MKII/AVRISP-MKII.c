@@ -86,7 +86,7 @@ void SetupHardware(void)
 
 #ifdef HELL_WATCH_PORT
 	hell_watch_hw_init();
-	hell_watch_disp_logo(0);
+	hell_watch_disp_logo(LOGO_INDEX_AVRISP);
 #endif
 
 	/* Hardware Initialization */
