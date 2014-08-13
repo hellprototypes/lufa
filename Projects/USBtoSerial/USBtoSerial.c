@@ -149,7 +149,7 @@ int main(void)
 		}
 
 		/* Load the next byte from the USART transmit buffer into the USART if transmit buffer space is available */
-		if (Serial_IsSendReady() && !(RingBuffer_IsEmpty(&USBtoUSART_Buffer)))
+		if (Serial_IsSendReady(&USARTE0) && !(RingBuffer_IsEmpty(&USBtoUSART_Buffer)))
 #ifdef HELL_WATCH_PORT
 		{
 		  Serial_SendByte(&USARTE0, RingBuffer_Remove(&USBtoUSART_Buffer));
